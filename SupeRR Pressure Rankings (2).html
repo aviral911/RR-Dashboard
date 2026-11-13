@@ -1,0 +1,535 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>SupeRR Pressure Rankings</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap">
+
+<style>
+/* SupeRR Selector Season 2 — Pressure Performance Dashboard
+   Layout: sticky header, two-tab view (Batters / Bowlers), top-10 cards + bar charts */
+
+:root {
+  --bg:        #0d1117;
+  --surface:   #161b22;
+  --surface2:  #1f2937;
+  --border:    #30363d;
+  --fg:        #e6edf3;
+  --fg2:       #8b949e;
+  --fg3:       #6e7681;
+  --accent:    #f97316;      /* RR saffron */
+  --accent2:   #fbbf24;      /* gold */
+  --good:      #22c55e;
+  --warn:      #f59e0b;
+  --danger:    #ef4444;
+  --bat:       #38bdf8;
+  --bowl:      #a78bfa;
+  color-scheme: dark;
+}
+/* single-theme dark — matches Rajasthan Royals brand world */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left,0px));
+  padding-right: max(16px, env(safe-area-inset-right,0px));
+  padding-block: 0;
+  min-height: 100%;
+}
+
+/* ── HEADER ───────────────────────────────────────────── */
+.header {
+  position: sticky;
+  top: env(safe-area-inset-top,0px);
+  z-index: 20;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding-block: 14px;
+}
+.header-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.logo-pill {
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.header h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fg);
+}
+.header-sub {
+  font-size: 12px;
+  color: var(--fg3);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ── TABS ─────────────────────────────────────────────── */
+.tabs {
+  max-width: 900px;
+  margin: 20px auto 0;
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 20px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg2);
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.tab-btn:hover { color: var(--fg); }
+.tab-btn.active-bat { color: var(--bat); border-bottom-color: var(--bat); }
+.tab-btn.active-bowl { color: var(--bowl); border-bottom-color: var(--bowl); }
+
+/* ── SECTION LABEL ───────────────────────────────────── */
+.section-label {
+  max-width: 900px;
+  margin: 24px auto 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.section-label h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+.section-label .metric-desc {
+  font-size: 12px;
+  color: var(--fg3);
+}
+
+/* ── CARDS ────────────────────────────────────────────── */
+.cards {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 40px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.card:hover { border-color: var(--fg3); }
+.card.expanded { border-color: var(--border); }
+
+.card-top {
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  gap: 0 12px;
+  align-items: center;
+}
+.avatar-wrap {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+}
+.avatar-circle {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  user-select: none;
+}
+.rank-badge {
+  position: absolute;
+  bottom: -3px;
+  right: -4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--fg3);
+  padding: 1px 4px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.rank-badge.top3 { color: var(--accent2); border-color: var(--accent2); }
+
+.card-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.card-team {
+  font-size: 11px;
+  color: var(--fg3);
+  margin-top: 2px;
+}
+
+.card-right {
+  text-align: right;
+  min-width: 80px;
+}
+.sr-diff, .eco-diff {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--good);
+  font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  font-size: 10px;
+  color: var(--fg3);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* confidence badge */
+.conf {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-top: 4px;
+}
+.conf-High   { background: rgba(34,197,94,.12);  color: var(--good); }
+.conf-Medium { background: rgba(245,158,11,.12); color: var(--warn); }
+.conf-Low    { background: rgba(239,68,68,.12);  color: var(--danger); }
+
+/* expand area */
+.card-detail {
+  display: none;
+  border-top: 1px solid var(--border);
+  padding: 16px;
+}
+.card.expanded .card-detail { display: block; }
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.stat-box {
+  background: var(--surface2);
+  border-radius: 7px;
+  padding: 10px 12px;
+}
+.stat-box .val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  line-height: 1.1;
+}
+.stat-box .val-sub {
+  font-size: 11px;
+  color: var(--fg2);
+  font-variant-numeric: tabular-nums;
+}
+.stat-box .lbl {
+  font-size: 10px;
+  color: var(--fg3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-top: 4px;
+}
+
+/* bar chart */
+.bar-wrap { margin: 6px 0 14px; }
+.bar-title { font-size: 11px; color: var(--fg3); margin-bottom: 6px; }
+.bar-track {
+  height: 7px;
+  background: var(--surface2);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  position: absolute;
+  left: 0;
+  transition: width .4s ease;
+}
+.bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg2);
+  margin-top: 3px;
+}
+.bar-labels .actual { color: var(--good); font-weight: 600; }
+
+.reason-text {
+  font-size: 12px;
+  color: var(--fg2);
+  line-height: 1.6;
+  border-left: 2px solid var(--border);
+  padding-left: 10px;
+  margin-top: 4px;
+}
+
+/* ── FOOTER ───────────────────────────────────────────── */
+.footer {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-block: 20px;
+  font-size: 11px;
+  color: var(--fg3);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer strong { color: var(--fg2); }
+
+/* ── PANEL VISIBILITY ─────────────────────────────────── */
+#panel-bat  { display: block; }
+#panel-bowl { display: none; }
+
+/* responsive */
+@media (max-width: 500px) {
+  .header h1 { font-size: 15px; }
+  .card-top { grid-template-columns: 38px 1fr auto; gap: 0 8px; }
+  .avatar-circle { width: 38px; height: 38px; font-size: 12px; }
+  .avatar-wrap { width: 38px; height: 38px; }
+  .sr-diff, .eco-diff { font-size: 15px; }
+}
+</style>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-inner">
+    <span class="logo-pill">SupeRR S2</span>
+    <h1>Pressure Performance Rankings</h1>
+    <span class="header-sub">IPL + T20I · 2022–2025</span>
+  </div>
+</header>
+
+<!-- ── TABS ── -->
+<div class="tabs">
+  <button class="tab-btn active-bat" id="tab-bat" onclick="switchTab('bat')">🏏 Top 10 Batters</button>
+  <button class="tab-btn" id="tab-bowl" onclick="switchTab('bowl')">⚡ Top 10 Bowlers</button>
+</div>
+
+<!-- ── BATTER PANEL ── -->
+<div id="panel-bat">
+  <div class="section-label">
+    <h2>Batters Under Pressure</h2>
+    <span class="metric-desc">Actual SR vs Expected SR in high-leverage situations (LI ≥ 1.25)</span>
+  </div>
+  <div class="cards" id="bat-cards"></div>
+</div>
+
+<!-- ── BOWLER PANEL ── -->
+<div id="panel-bowl">
+  <div class="section-label">
+    <h2>Bowlers Under Pressure</h2>
+    <span class="metric-desc">Actual Economy vs Expected Economy in high-leverage situations (LI ≥ 1.25)</span>
+  </div>
+  <div class="cards" id="bowl-cards"></div>
+</div>
+
+<footer class="footer">
+  <span><strong>Pressure ball:</strong> Leverage Index ≥ 1.25 (top ~17% of match situations)</span>
+  <span><strong>Expected values:</strong> from win-probability & outcome models fit on 2022–2025 data</span>
+  <span><strong>Eligibility:</strong> ≥ 50 pressure balls, ≥ 6 appearances</span>
+  <span><strong>Confidence:</strong> High = 200+ balls, Medium = 100–199, Low = &lt;100 (shrunk)</span>
+</footer>
+
+<script>
+const AV_COLORS=['#e11d48','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#4f46e5','#0369a1','#15803d','#b45309','#9333ea','#0284c7','#16a34a'];
+function ini(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+function avbg(n){let h=0;for(let c of n)h=(h*31+c.charCodeAt(0))&0xffff;return AV_COLORS[h%AV_COLORS.length];}
+const BATTERS = [{"rank":1,"name":"Reeza Hendricks","team":"South Africa","P_balls":149,"P_inns":13,"P_SR":178.5,"P_xSR":145.4,"P_outs":3,"P_xouts":8.1,"P_bd":28.2,"P_xbd":21.9,"confidence":"Medium","reason":"Opening batter (South Africa). Under pressure: 149 balls over 13 innings, SR 179 vs 145 expected for identical match situations (+33); 3 dismissals vs 8.1 expected. Raises his game when it matters (+22 net runs/100 balls vs his usual level); delivers above expectation in 68% of pressure innings.","lift100":21.6,"net_runs":91.4},{"rank":2,"name":"Phil Salt","team":"England / Royal Challengers Bengaluru","P_balls":262,"P_inns":23,"P_SR":186.3,"P_xSR":141.2,"P_outs":7,"P_xouts":12.7,"P_bd":30.9,"P_xbd":21.8,"confidence":"High","reason":"Opening batter (England / RCB). Under pressure: 262 balls over 23 innings, SR 186 vs 141 expected (+45); 7 dismissals vs 12.7 expected. Scores faster than the situation demands (+45 SR points); delivers above expectation in 69% of pressure innings.","lift100":18.6,"net_runs":158.0},{"rank":3,"name":"Sikandar Raza","team":"Zimbabwe / Punjab Kings","P_balls":138,"P_inns":13,"P_SR":158.0,"P_xSR":128.1,"P_outs":4,"P_xouts":8.9,"P_bd":19.6,"P_xbd":14.8,"confidence":"Medium","reason":"Middle-order batter (Zimbabwe / Punjab Kings). Under pressure: 138 balls over 13 innings, SR 158 vs 128 expected (+30); 4 dismissals vs 8.9 expected. Raises his game when it matters (+21 net runs/100 balls vs his usual level).","lift100":20.7,"net_runs":68.9},{"rank":4,"name":"Tim David","team":"Australia / Royal Challengers Bengaluru","P_balls":270,"P_inns":24,"P_SR":191.1,"P_xSR":153.3,"P_outs":15,"P_xouts":19.9,"P_bd":26.7,"P_xbd":20.3,"confidence":"High","reason":"Lower-order finisher (Australia / RCB). Under pressure: 270 balls over 24 innings, SR 191 vs 153 expected (+38); 15 dismissals vs 19.9 expected. Delivers above expectation in 70% of pressure innings; hits boundaries on 27% of pressure balls (expected 20%).","lift100":11.4,"net_runs":119.7},{"rank":5,"name":"Vaibhav Sooryavanshi","team":"India / Rajasthan Royals","P_balls":159,"P_inns":14,"P_SR":205.0,"P_xSR":147.7,"P_outs":8,"P_xouts":7.3,"P_bd":35.2,"P_xbd":23.3,"confidence":"Medium","reason":"Opening batter (India / Rajasthan Royals). Under pressure: 159 balls over 14 innings, SR 205 vs 148 expected (+57); hits boundaries on 35% of pressure balls (expected 23%).","lift100":7.7,"net_runs":89.5},{"rank":6,"name":"Shashank Singh","team":"Punjab Kings","P_balls":94,"P_inns":11,"P_SR":190.4,"P_xSR":170.8,"P_outs":1,"P_xouts":7.1,"P_bd":24.5,"P_xbd":23.7,"confidence":"Low","reason":"Lower-order finisher (Punjab Kings). Under pressure: 94 balls over 11 innings, SR 190 vs 171 expected (+20); rarely gifts wickets (1 out vs 7.1 expected). Thin sample — rating shrunk toward usual level.","lift100":17.9,"net_runs":45.1},{"rank":7,"name":"Suryakumar Yadav","team":"India / Mumbai Indians","P_balls":467,"P_inns":35,"P_SR":171.5,"P_xSR":142.6,"P_outs":24,"P_xouts":25.7,"P_bd":26.1,"P_xbd":19.0,"confidence":"High","reason":"Middle-order batter (India / MI). Under pressure: 467 balls over 35 innings, SR 172 vs 143 expected (+29); largest sample in the top 10; hits boundaries on 26% of pressure balls (expected 19%).","lift100":7.7,"net_runs":167.6},{"rank":8,"name":"Rinku Singh","team":"India / Kolkata Knight Riders","P_balls":119,"P_inns":7,"P_SR":192.4,"P_xSR":152.5,"P_outs":4,"P_xouts":9.3,"P_bd":28.6,"P_xbd":20.7,"confidence":"Low","reason":"Lower-order finisher (India / KKR). Under pressure: 119 balls over 7 innings, SR 192 vs 153 expected (+40); hits boundaries on 29% of pressure balls (expected 21%). Thin sample.","lift100":15.1,"net_runs":66.0},{"rank":9,"name":"Virat Kohli","team":"India / Royal Challengers Bengaluru","P_balls":438,"P_inns":37,"P_SR":153.7,"P_xSR":145.2,"P_outs":13,"P_xouts":21.7,"P_bd":22.1,"P_xbd":22.0,"confidence":"High","reason":"Opening batter (India / RCB). Under pressure: 438 balls over 37 innings; 13 dismissals vs 21.7 expected — rarely gifts his wicket. Raises his game when it matters (+14 net runs/100 balls vs his usual level).","lift100":13.6,"net_runs":102.3},{"rank":10,"name":"Muhammad Waseem","team":"United Arab Emirates","P_balls":67,"P_inns":6,"P_SR":153.7,"P_xSR":128.3,"P_outs":1,"P_xouts":3.7,"P_bd":19.4,"P_xbd":18.3,"confidence":"Low","reason":"Opening batter (UAE). Under pressure: 67 balls over 6 innings, SR 154 vs 128 expected (+25); 1 dismissal vs 3.7 expected. Thin sample — rating shrunk toward usual level.","lift100":10.0,"net_runs":40.1}];
+
+const BOWLERS = [{"rank":1,"name":"Sufiyan Muqeem","team":"Pakistan","P_balls":94,"P_inns":8,"P_econ":4.8,"P_xecon":7.8,"P_wk":7,"P_xwk":5.5,"P_dot":57.4,"P_xdot":29.4,"confidence":"Low","reason":"Left-arm Chinaman (Pakistan). Under pressure: 94 balls over 8 spells, economy 4.79 vs 7.77 expected (−2.98); dot-ball rate 57% (expected 29%). Thin sample — rating shrunk toward usual level.","lift100":18.2,"net_runs":51.5,"btype":"Left-arm Chinaman","pace":"Spin"},{"rank":2,"name":"Jasprit Bumrah","team":"India / Mumbai Indians","P_balls":292,"P_inns":24,"P_econ":6.6,"P_xecon":9.1,"P_wk":12,"P_xwk":16.5,"P_dot":50.0,"P_xdot":33.0,"confidence":"High","reason":"Right-arm Fast (India / MI). Under pressure: 292 balls over 24 spells, economy 6.64 vs 9.12 expected (−2.48); beats expectation in 65% of pressure spells; boundary rate 14% (expected 22%).","lift100":4.9,"net_runs":101.5,"btype":"Right-arm Fast","pace":"Pace"},{"rank":3,"name":"Sunil Narine","team":"Kolkata Knight Riders","P_balls":250,"P_inns":21,"P_econ":6.6,"P_xecon":8.8,"P_wk":12,"P_xwk":12.4,"P_dot":38.4,"P_xdot":28.2,"confidence":"High","reason":"Right-arm offbreak (KKR). Under pressure: 250 balls over 21 spells, economy 6.65 vs 8.80 expected (−2.16); boundary rate 11% (expected 19%).","lift100":2.2,"net_runs":86.4,"btype":"Right-arm offbreak","pace":"Spin"},{"rank":4,"name":"Krunal Pandya","team":"Royal Challengers Bengaluru","P_balls":202,"P_inns":17,"P_econ":6.6,"P_xecon":8.2,"P_wk":12,"P_xwk":8.9,"P_dot":36.6,"P_xdot":29.6,"confidence":"Medium","reason":"Slow left-arm orthodox (RCB). Under pressure: 202 balls over 17 spells, economy 6.56 vs 8.25 expected (−1.68); beats expectation in 63% of spells; wickets at 1.3× expected rate.","lift100":7.8,"net_runs":73.1,"btype":"Slow left-arm","pace":"Spin"},{"rank":5,"name":"Rashid Khan","team":"Afghanistan / Gujarat Titans","P_balls":396,"P_inns":32,"P_econ":7.5,"P_xecon":8.4,"P_wk":34,"P_xwk":21.3,"P_dot":36.4,"P_xdot":28.8,"confidence":"High","reason":"Right-arm Leg-Break (Afghanistan / GT). Under pressure: 396 balls over 32 spells; wickets at 1.6× expected rate; largest spin sample in the top 10.","lift100":4.2,"net_runs":106.5,"btype":"Leg-break","pace":"Spin"},{"rank":6,"name":"Kuldeep Yadav","team":"India / Delhi Capitals","P_balls":202,"P_inns":17,"P_econ":7.7,"P_xecon":8.8,"P_wk":13,"P_xwk":10.7,"P_dot":32.7,"P_xdot":24.9,"confidence":"Medium","reason":"Left-arm Chinaman (India / DC). Under pressure: 202 balls over 17 spells, economy 7.66 vs 8.84 expected (−1.17); wickets at 1.2× expected rate; boundary rate 12% (expected 17%).","lift100":4.2,"net_runs":53.1,"btype":"Left-arm Chinaman","pace":"Spin"},{"rank":7,"name":"Trent Boult","team":"New Zealand / Mumbai Indians","P_balls":340,"P_inns":33,"P_econ":7.2,"P_xecon":8.7,"P_wk":18,"P_xwk":17.6,"P_dot":48.8,"P_xdot":36.8,"confidence":"High","reason":"Left-arm fast-medium (NZ / MI). Under pressure: 340 balls over 33 spells, economy 7.24 vs 8.73 expected (−1.49); improves under pressure (+14 net runs/100 vs usual level).","lift100":13.9,"net_runs":92.0,"btype":"Left-arm fast-medium","pace":"Pace"},{"rank":8,"name":"Mitchell Santner","team":"New Zealand / Mumbai Indians","P_balls":242,"P_inns":26,"P_econ":7.0,"P_xecon":8.6,"P_wk":18,"P_xwk":12.3,"P_dot":40.5,"P_xdot":30.4,"confidence":"Medium","reason":"Slow left-arm orthodox (NZ / MI). Under pressure: 242 balls over 26 spells, economy 6.97 vs 8.62 expected (−1.66); wickets at 1.5× expected rate.","lift100":7.1,"net_runs":97.6,"btype":"Slow left-arm","pace":"Spin"},{"rank":9,"name":"Mohammad Nawaz","team":"Pakistan","P_balls":216,"P_inns":18,"P_econ":6.8,"P_xecon":7.5,"P_wk":19,"P_xwk":11.3,"P_dot":37.0,"P_xdot":32.4,"confidence":"Medium","reason":"Slow left-arm orthodox (Pakistan). Under pressure: 216 balls over 18 spells, economy 6.75 vs 7.53 expected (−0.78); wickets at 1.7× expected rate — highest multiplier in the top 10.","lift100":5.2,"net_runs":74.0,"btype":"Slow left-arm","pace":"Spin"},{"rank":10,"name":"Akeal Hosein","team":"West Indies / Chennai Super Kings","P_balls":342,"P_inns":34,"P_econ":7.8,"P_xecon":8.7,"P_wk":20,"P_xwk":17.4,"P_dot":38.9,"P_xdot":33.5,"confidence":"High","reason":"Slow left-arm orthodox (WI / CSK). Under pressure: 342 balls over 34 spells; beats expectation in 59% of spells; large sample; boundary rate 15% (expected 20%).","lift100":1.5,"net_runs":66.2,"btype":"Slow left-arm","pace":"Spin"}];
+
+function barHTML(actual, expected, color, unitA, unitE) {
+  const max = Math.max(actual, expected) * 1.15;
+  const pA = (actual / max * 100).toFixed(1);
+  const pE = (expected / max * 100).toFixed(1);
+  return `
+    <div class="bar-wrap">
+      <div class="bar-title">Actual vs Expected</div>
+      <div style="position:relative;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:3px">
+        <div class="bar-fill" style="width:${pE}%;background:var(--border);opacity:.7"></div>
+        <div class="bar-fill" style="width:${pA}%;background:${color}"></div>
+      </div>
+      <div class="bar-labels">
+        <span class="actual">${unitA}: ${actual}</span>
+        <span>Expected: ${expected}</span>
+      </div>
+    </div>`;
+}
+
+function batCard(d) {
+  const diff = (d.P_SR - d.P_xSR).toFixed(1);
+  const isTop3 = d.rank <= 3;
+  return `
+  <div class="card" id="bat-card-${d.rank}" onclick="toggle('bat-card-${d.rank}')">
+    <div class="card-top">
+      <div class="avatar-wrap">
+        <div class="avatar-circle" style="background:${avbg(d.name)}">${ini(d.name)}</div>
+        <div class="rank-badge ${isTop3?'top3':''}}">#${d.rank}</div>
+      </div>
+      <div>
+        <div class="card-name">${d.name}</div>
+        <div class="card-team">${d.team}</div>
+        <span class="conf conf-${d.confidence}">${d.confidence}</span>
+      </div>
+      <div class="card-right">
+        <div class="sr-diff">+${diff}</div>
+        <div class="stat-label">SR above xSR</div>
+      </div>
+    </div>
+    <div class="card-detail">
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="val">${d.P_SR}</div>
+          <div class="val-sub">xSR: ${d.P_xSR}</div>
+          <div class="lbl">Strike Rate</div>
+        </div>
+        <div class="stat-box">
+          <div class="val">${d.P_outs}</div>
+          <div class="val-sub">Expected: ${d.P_xouts}</div>
+          <div class="lbl">Dismissals</div>
+        </div>
+        <div class="stat-box">
+          <div class="val">${d.P_bd}%</div>
+          <div class="val-sub">Expected: ${d.P_xbd}%</div>
+          <div class="lbl">Boundary %</div>
+        </div>
+        <div class="stat-box">
+          <div class="val">${d.P_balls}</div>
+          <div class="val-sub">${d.P_inns} innings</div>
+          <div class="lbl">Pressure Balls</div>
+        </div>
+        <div class="stat-box">
+          <div class="val">+${d.lift100}</div>
+          <div class="val-sub">net runs/100</div>
+          <div class="lbl">Pressure Lift</div>
+        </div>
+      </div>
+      ${barHTML(d.P_SR, d.P_xSR, 'var(--bat)', 'SR', 'xSR')}
+      <div class="reason-text">${d.reason}</div>
+    </div>
+  </div>`;
+}
+
+function bowlCard(d) {
+  const diff = (d.P_xecon - d.P_econ).toFixed(2);
+  const isTop3 = d.rank <= 3;
+  return `
+  <div class="card" id="bowl-card-${d.rank}" onclick="toggle('bowl-card-${d.rank}')">
+    <div class="card-top">
+      <div class="avatar-wrap">
+        <div class="avatar-circle" style="background:${avbg(d.name)}">${ini(d.name)}</div>
+        <div class="rank-badge ${isTop3?'top3':''}}">#${d.rank}</div>
+      </div>
+      <div>
+        <div class="card-name">${d.name}</div>
+        <div class="card-team">${d.team} · <em style="font-style:normal;color:var(--fg3)">${d.btype}</em></div>
+        <span class="conf conf-${d.confidence}">${d.confidence}</span>
+      </div>
+      <div class="card-right">
+        <div class="eco-diff">−${diff}</div>
+        <div class="stat-label">Runs saved/over</div>
+      </div>
+    </div>
+    <div class="card-detail">
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="val">${d.P_econ}</div>
+          <div class="val-sub">xEcon: ${d.P_xecon}</div>
+          <div class="lbl">Economy</div>
+        </div>
+        <div class="stat-box">
+          <div class="val">${d.P_wk}</div>
+          <div class="val-sub">Expected: ${d.P_xwk}</div>
+          <div class="lbl">Wickets</div>
+        </div>
+        <div class="stat-box">
+          <div class="val">${d.P_dot}%</div>
+          <div class="val-sub">Expected: ${d.P_xdot}%</div>
+          <div class="lbl">Dot Ball %</div>
+        </div>
+        <div class="stat-box">
+          <div class="val">${d.P_balls}</div>
+          <div class="val-sub">${d.P_inns} spells</div>
+          <div class="lbl">Pressure Balls</div>
+        </div>
+        <div class="stat-box">
+          <div class="val">+${d.lift100}</div>
+          <div class="val-sub">net runs/100</div>
+          <div class="lbl">Pressure Lift</div>
+        </div>
+      </div>
+      ${barHTML(d.P_econ, d.P_xecon, 'var(--bowl)', 'Economy', 'xEcon')}
+      <div class="reason-text">${d.reason}</div>
+    </div>
+  </div>`;
+}
+
+document.getElementById('bat-cards').innerHTML = BATTERS.map(batCard).join('');
+document.getElementById('bowl-cards').innerHTML = BOWLERS.map(bowlCard).join('');
+
+function toggle(id) {
+  document.getElementById(id).classList.toggle('expanded');
+}
+
+function switchTab(tab) {
+  document.getElementById('panel-bat').style.display  = tab==='bat'  ? 'block' : 'none';
+  document.getElementById('panel-bowl').style.display = tab==='bowl' ? 'block' : 'none';
+  document.getElementById('tab-bat').className  = 'tab-btn' + (tab==='bat'  ? ' active-bat'  : '');
+  document.getElementById('tab-bowl').className = 'tab-btn' + (tab==='bowl' ? ' active-bowl' : '');
+}
+</script>
+
+</body></html>
